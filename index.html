@@ -1,0 +1,142 @@
+<style>
+    body {
+        background: black;
+    }
+
+    canvas {
+        background: #222;
+    }
+</style>
+
+<canvas id="canvas" width="800" height="600">
+</canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+
+<script>
+    "use strict";
+    // * utils *
+
+    function partial(fn) {
+        let slice = Array.prototype.slice;
+        // Convert arguments object to an array, removing the first argument.
+        let args = slice.call(arguments, 1);
+        return function() {
+            // Invoke the originally-specified function, passing in all originally-
+            // specified arguments, followed by any just-specified arguments.
+            return fn.apply(this, args.concat(slice.call(arguments, 0)));
+        };
+    }
+
+    function distance(ax, ay, bx, by) {
+        console.log(ax, ay, bx, by);
+        return Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
+    }
+
+    function zeroes(x, y) {
+        return new Array(x).fill().map(() => new Array(y).fill(0));
+    }
+</script>
+
+<script>
+    "use strict";
+
+    let key_states = (() => {
+        let state = {
+            'left_key_down': false,
+            'right_key_down': false
+        };
+        let keys = {
+            'left': 'ArrowLeft',
+            'right': 'ArrowRight'
+        };
+
+        $('body').on('keydown', (e) => {
+            if (e.key == keys.left) {
+                state.left_key_down = true;
+            } else if (e.key == keys.right) {
+                state.right_key_down = true;
+            }
+        }).on('keyup', (e) => {
+            if (e.key == keys.left) {
+                state.left_key_down = false;
+            } else if (e.key == keys.right) {
+                state.right_key_down = false;
+            }
+        });
+
+        return state;
+    })();
+
+    let History = function (x, y) {
+        let grid = zeroes(x, y);
+
+        console.log('width', grid.length);
+        console.log('height', grid[0].length);
+
+        this.push = function (x, y) {
+            // Checks whether surrounding pixels have been visited and kills
+            // the worm with an exception if any of them have. Otherwise pushes
+            // the current position to history.
+            if (grid[x][y]
+                    || grid[x-1][y]
+                    || grid[x+1][y]
+                    || grid[x][y-1]
+                    || grid[x][y+1]) {
+                throw Error("you have already been here");
+            }
+            grid[x][y] = 1;
+        };
+    };
+
+    let Worm = function (x, y, direction, color, history) {
+        let _this = this;
+        let speed = 2.5;
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+
+        let get_x = () => Math.round(this.x);
+        let get_y = () => Math.round(this.y);
+
+        this.travel = (key_states) => {
+            history.push(get_x(), get_y());
+            if (key_states.left_key_down) {
+                _this.direction -= .06;
+            } else if (key_states.right_key_down) {
+                _this.direction += .06;
+            }
+            _this.x += speed * Math.cos(_this.direction);
+            _this.y += speed * Math.sin(_this.direction);
+        };
+
+        this.paint = (context) => {
+            context.beginPath();
+            context.fillStyle = color;
+            context.arc(_this.x, _this.y, 2, 0, Math.PI * 2, true);
+            context.fill();
+        };
+    };
+
+    let app = {};
+
+    (() => {
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+
+        let history = new History(canvas.width, canvas.height);
+
+        let worms = [new Worm(300, 400, .2, '#f00', history),
+                     new Worm(400, 300, .2, '#0f0', history), ];
+
+        let loop = () => {
+            worms.forEach((worm) => {
+                worm.travel(key_states);
+                worm.paint(ctx);
+            });
+            window.requestAnimationFrame(loop);
+        };
+
+        window.requestAnimationFrame(loop);
+    })();
+</script>
