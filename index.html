@@ -3,13 +3,25 @@
         background: black;
     }
 
-    canvas {
+    .game {
+        position: relative;
+    }
+
+    .game-layer {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    #history_layer {
         background: #111;
     }
 </style>
 
-<canvas id="canvas" width="1024" height="800">
-</canvas>
+<div class="game">
+    <canvas id="history_layer" class="game-layer" width="1024" height="800"></canvas>
+    <canvas id="position_layer" class="game-layer" width="1024" height="800"></canvas>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 
@@ -91,6 +103,7 @@
                 // die if we're not in the same position as in the previous loop
                 if (previous_x !== get_x() || previous_y !== get_y()) {
                     console.log(e);
+                    console.log(color, get_x(), get_y());
                     die();
                 }
             }
@@ -128,34 +141,46 @@
 
             let paint_time = performance.now();
             let dt = paint_time - last_paint_time;
-            console.log('dt', dt);
             last_paint_time = paint_time;
 
             _this.x += dt * speed * Math.cos(_this.direction);
             _this.y += dt * speed * Math.sin(_this.direction);
         };
 
-        this.paint = (context) => {
+        this.paint = (history_context) => {
+            // if we're in a jump we do not draw to the history layer
             if (in_jump) return;
-            //context.save();
-            context.beginPath();
-            context.fillStyle = color;
-            context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
-            /*context.translate(x, y);
-            context.rotate(direction);
-            context.fillRect(_this.x - 5, _this.y - 1, 10, 2);*/
-            context.fill();
-            //context.restore();
+
+            //history_context.save();
+            history_context.beginPath();
+            history_context.fillStyle = color;
+            history_context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
+            /*history_context.translate(x, y);
+            history_context.rotate(direction);
+            history_context.fillRect(_this.x - 5, _this.y - 1, 10, 2);*/
+            history_context.fill();
+            //history_context.restore();
+        };
+
+        this.paint_current_pos = (position_context) => {
+            // paint filled circle at current position
+            position_context.beginPath();
+            position_context.fillStyle = color;
+            position_context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
+            position_context.fill();
         };
     };
 
     let app = {};
 
     (() => {
-        let canvas = document.getElementById('canvas');
-        let ctx = canvas.getContext('2d');
+        let history_layer = document.getElementById('history_layer');
+        let history_ctx = history_layer.getContext('2d');
 
-        let history = new History(canvas.width, canvas.height);
+        let position_layer = document.getElementById('position_layer');
+        let position_ctx = position_layer.getContext('2d');
+
+        let history = new History(history_layer.width, history_layer.height);
 
         let lr = {'left': 'ArrowLeft', 'right': 'ArrowRight'};
         let zx = {'left': 'z', 'right': 'x'};
@@ -180,12 +205,16 @@
         ];
 
         let loop = () => {
+            // clear position layer
+            position_ctx.clearRect(
+                0, 0, position_layer.width, position_layer.height);
+
             worms.forEach((worm) => {
-                //console.log(worm.x, worm.y);
-                if (Math.random() > .99)
+                if (Math.random() > .995)
                     worm.start_jump();
                 worm.travel();
-                worm.paint(ctx);
+                worm.paint(history_ctx);
+                worm.paint_current_pos(position_ctx);
             });
             window.requestAnimationFrame(loop);
         };
