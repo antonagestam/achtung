@@ -64,7 +64,7 @@
 
     let Worm = function (x, y, direction, color, history, keys) {
         let _this = this;
-        let speed = 2.3;
+        let speed = .14;
         let turn_speed = .04;
         let dead = false;
         let size = 4;
@@ -73,6 +73,8 @@
         this.direction = direction;
         let in_jump = false;
         let jump_count = 0;
+        let last_paint_time;
+        let previous_x, previous_y;
 
         let get_x = () => Math.round(this.x);
         let get_y = () => Math.round(this.y);
@@ -86,9 +88,14 @@
             try {
                 history.push(get_x(), get_y());
             } catch (e) {
-                console.log(e);
-                die();
+                // die if we're not in the same position as in the previous loop
+                if (previous_x !== get_x() || previous_y !== get_y()) {
+                    console.log(e);
+                    die();
+                }
             }
+            previous_x = get_x();
+            previous_y = get_y();
         };
 
         this.start_jump = () => {
@@ -103,19 +110,29 @@
         };
 
         this.travel = () => {
+            // don't move if we're dead
             if (dead) return;
 
-            this.jump();
+            if (last_paint_time === undefined)
+                last_paint_time = performance.now();
 
+            // if we're in a jump, count the number of loops,
+            // otherwise push the position to history
             if (!in_jump) pushHistory();
+            else this.jump();
 
-            if (get_key_state(keys.left)) {
+            if (get_key_state(keys.left))
                 _this.direction -= turn_speed;
-            } else if (get_key_state(keys.right)) {
+            else if (get_key_state(keys.right))
                 _this.direction += turn_speed;
-            }
-            _this.x += speed * Math.cos(_this.direction);
-            _this.y += speed * Math.sin(_this.direction);
+
+            let paint_time = performance.now();
+            let dt = paint_time - last_paint_time;
+            console.log('dt', dt);
+            last_paint_time = paint_time;
+
+            _this.x += dt * speed * Math.cos(_this.direction);
+            _this.y += dt * speed * Math.sin(_this.direction);
         };
 
         this.paint = (context) => {
@@ -164,6 +181,7 @@
 
         let loop = () => {
             worms.forEach((worm) => {
+                //console.log(worm.x, worm.y);
                 if (Math.random() > .99)
                     worm.start_jump();
                 worm.travel();
