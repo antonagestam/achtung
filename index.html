@@ -4,11 +4,11 @@
     }
 
     canvas {
-        background: #222;
+        background: #111;
     }
 </style>
 
-<canvas id="canvas" width="800" height="600">
+<canvas id="canvas" width="1024" height="800">
 </canvas>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
@@ -36,37 +36,25 @@
     function zeroes(x, y) {
         return new Array(x).fill().map(() => new Array(y).fill(0));
     }
+
+    let get_key_state = (() => {
+        let state = {};
+
+        $('body').on('keydown', (e) => {
+            state[e.key] = true;
+        }).on('keyup', (e) => {
+            state[e.key] = false;
+        });
+
+        return (key) => state.hasOwnProperty(key) && state[key] || false;
+    })();
+
+    let random_direction = () => Math.random() * 2 * Math.PI;
+    let random_within = (min, max) => Math.random() * (max-min) + min;
 </script>
 
 <script>
     "use strict";
-
-    let key_states = (() => {
-        let state = {
-            'left_key_down': false,
-            'right_key_down': false
-        };
-        let keys = {
-            'left': 'ArrowLeft',
-            'right': 'ArrowRight'
-        };
-
-        $('body').on('keydown', (e) => {
-            if (e.key == keys.left) {
-                state.left_key_down = true;
-            } else if (e.key == keys.right) {
-                state.right_key_down = true;
-            }
-        }).on('keyup', (e) => {
-            if (e.key == keys.left) {
-                state.left_key_down = false;
-            } else if (e.key == keys.right) {
-                state.right_key_down = false;
-            }
-        });
-
-        return state;
-    })();
 
     let History = function (x, y) {
         let grid = zeroes(x, y);
@@ -89,32 +77,75 @@
         };
     };
 
-    let Worm = function (x, y, direction, color, history) {
+    let JUMP_LENGTH = 5;
+
+    let Worm = function (x, y, direction, color, history, keys) {
         let _this = this;
-        let speed = 2.5;
+        let speed = 2.3;
+        let turn_speed = .04;
+        let dead = false;
+        let size = 4;
         this.x = x;
         this.y = y;
         this.direction = direction;
+        let in_jump = false;
+        let jump_count = 0;
 
         let get_x = () => Math.round(this.x);
         let get_y = () => Math.round(this.y);
 
-        this.travel = (key_states) => {
-            history.push(get_x(), get_y());
-            if (key_states.left_key_down) {
-                _this.direction -= .06;
-            } else if (key_states.right_key_down) {
-                _this.direction += .06;
+        let die = () => {
+            speed = 0;
+            dead = true;
+        };
+
+        let pushHistory = () => {
+            try {
+                history.push(get_x(), get_y());
+            } catch (e) {
+                console.log(e);
+                die();
+            }
+        };
+
+        this.start_jump = () => {
+            in_jump = true;
+            jump_count = 0;
+        };
+
+        this.jump = () => {
+            jump_count += 1;
+            if (jump_count > JUMP_LENGTH)
+                in_jump = false;
+        };
+
+        this.travel = () => {
+            if (dead) return;
+
+            this.jump();
+
+            if (!in_jump) pushHistory();
+
+            if (get_key_state(keys.left)) {
+                _this.direction -= turn_speed;
+            } else if (get_key_state(keys.right)) {
+                _this.direction += turn_speed;
             }
             _this.x += speed * Math.cos(_this.direction);
             _this.y += speed * Math.sin(_this.direction);
         };
 
         this.paint = (context) => {
+            if (in_jump) return;
+            //context.save();
             context.beginPath();
             context.fillStyle = color;
-            context.arc(_this.x, _this.y, 2, 0, Math.PI * 2, true);
+            context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
+            /*context.translate(x, y);
+            context.rotate(direction);
+            context.fillRect(_this.x - 5, _this.y - 1, 10, 2);*/
             context.fill();
+            //context.restore();
         };
     };
 
@@ -126,12 +157,33 @@
 
         let history = new History(canvas.width, canvas.height);
 
-        let worms = [new Worm(300, 400, .2, '#f00', history),
-                     new Worm(400, 300, .2, '#0f0', history), ];
+        let lr = {'left': 'ArrowLeft', 'right': 'ArrowRight'};
+        let zx = {'left': 'z', 'right': 'x'};
+        let nm = {'left': 'n', 'right': 'm'};
+
+        let worms = [
+            new Worm(
+                random_within(200, 600), // initial x
+                random_within(200, 400), // initial y
+                random_direction(), // initial direction
+                '#ff5600', history, lr),
+            new Worm(
+                random_within(200, 600), // initial x
+                random_within(200, 400), // initial y
+                random_direction(), // initial direction
+                '#0f8', history, zx),
+            new Worm(
+                random_within(200, 600), // initial x
+                random_within(200, 400), // initial y
+                random_direction(), // initial direction
+                '#05f', history, nm),
+        ];
 
         let loop = () => {
             worms.forEach((worm) => {
-                worm.travel(key_states);
+                if (Math.random() > .99)
+                    worm.start_jump();
+                worm.travel();
                 worm.paint(ctx);
             });
             window.requestAnimationFrame(loop);
