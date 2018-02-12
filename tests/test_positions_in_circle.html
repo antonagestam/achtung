@@ -1,0 +1,42 @@
+<style>
+    #canvas {
+        background: #eee;
+    }
+</style>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script src="../geometry.js"></script>
+<script async>
+    "use strict";
+
+    window.onload = () => {
+        let start = performance.now();
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+
+        let pixel = ctx.createImageData(1, 1);
+        pixel.data[0] = 255;
+        pixel.data[3] = 150;
+
+        let a = 400;
+        let b = 300;
+        let r = 100;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let c = 0;
+
+        for (let [x, y] of positions_in_circle(a, b, r)) {
+            window.setTimeout(
+                () => window.requestAnimationFrame(
+                    () =>ctx.putImageData(pixel, x, y), 0));
+            //ctx.putImageData(pixel, x, y);
+            c++;
+        }
+
+        console.log(
+            'generated ' + c + ' pixels in '
+            + (performance.now()-start) + 'ms');
+    };
+</script>

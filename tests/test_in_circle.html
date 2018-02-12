@@ -1,0 +1,45 @@
+<style>
+    #canvas {
+        background: #222;
+    }
+</style>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script src="../geometry.js"></script>
+<script>
+    "use strict";
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+
+    let mouseX = 0, mouseY = 0;
+
+    document.onmousemove = (e) => {
+        mouseX = e.clientX - canvas.offsetLeft;
+        mouseY = e.clientY - canvas.offsetTop;
+    };
+
+    let loop = () => {
+        let a = 400;
+        let b = 300;
+        let r = 200;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.beginPath();
+        ctx.arc(a, b, r, - Math.PI, Math.PI);
+        if (in_circle(mouseX, mouseY, a, b, r))
+            ctx.fillStyle = '#45ff83';
+        else
+            ctx.fillStyle = '#ff4583';
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('x: ' + mouseX + ', y: ' + mouseY, 10, 20);
+
+        window.requestAnimationFrame(loop);
+    };
+
+    window.requestAnimationFrame(loop);
+</script>

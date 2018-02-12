@@ -23,70 +23,57 @@
     <canvas id="position_layer" class="game-layer" width="1024" height="800"></canvas>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"
+    integrity="sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU="
+    crossorigin="anonymous"></script>
+
+<script src="./random.js"></script>
+<script src="./geometry.js"></script>
 
 <script>
     "use strict";
-    // * utils *
-    function zeroes(x, y) {
-        return new Array(x).fill().map(() => new Array(y).fill(0));
-    }
+
+    console.log('loaded key state');
 
     let get_key_state = (() => {
         let state = {};
 
-        $('body').on('keydown', (e) => {
-            state[e.key] = true;
-        }).on('keyup', (e) => {
-            state[e.key] = false;
-        });
+        $('body')
+            .on('keyup', (e) => state[e.key] = true)
+            .on('keydown', (e) => state[e.key] = false);
 
         return (key) => state.hasOwnProperty(key) && state[key] || false;
     })();
 
-    let random_direction = () => Math.random() * 2 * Math.PI;
-    let random_within = (min, max) => Math.random() * (max-min) + min;
 </script>
 
 <script>
     "use strict";
 
-    let History = function (x, y) {
-        let grid = zeroes(x, y);
+    function* pixels_in_head(ctx, a, b, r, direction) {
+        /*
+        Yields all pixel values as an array of [R, G, B, A] from the given
+        context that are within the circle that has a center of x, y = a, b and
+        a radius of r.
+         */
+        for (let [x, y] of positions_in_head(a, b, r, direction)) {
+            console.log('pixels_in_head', x, y);
+            yield ctx.getImageData(x, y, 1, 1);}
+    }
 
-        console.log('width', grid.length);
-        console.log('height', grid[0].length);
-
-        this.push = function (x, y) {
-            // Checks whether surrounding pixels have been visited and kills
-            // the worm with an exception if any of them have. Otherwise pushes
-            // the current position to history.
-            if (grid[x][y]
-                    || grid[x-1][y]
-                    || grid[x+1][y]
-                    || grid[x][y-1]
-                    || grid[x][y+1]) {
-                throw Error("you have already been here");
-            }
-            grid[x][y] = 1;
-        };
-    };
-
-    let JUMP_LENGTH = 5;
-
-    let Worm = function (x, y, direction, color, history, keys) {
-        let _this = this;
+    let Worm = function (x, y, direction, color, keys) {
         let speed = .14;
-        let turn_speed = .04;
+        let turn_speed = .0025;
+        let size = 5;
+        let jump_length = 12;
         let dead = false;
-        let size = 4;
         this.x = x;
         this.y = y;
         this.direction = direction;
         let in_jump = false;
         let jump_count = 0;
         let last_paint_time;
-        let previous_x, previous_y;
 
         let get_x = () => Math.round(this.x);
         let get_y = () => Math.round(this.y);
@@ -96,82 +83,90 @@
             dead = true;
         };
 
-        let pushHistory = () => {
-            try {
-                history.push(get_x(), get_y());
-            } catch (e) {
-                // die if we're not in the same position as in the previous loop
-                if (previous_x !== get_x() || previous_y !== get_y()) {
-                    console.log(e);
-                    console.log(color, get_x(), get_y());
-                    die();
-                }
+        let check_history = (ctx) => {
+            let x = get_x();
+            let y = get_y();
+
+            return;
+
+            //die();
+
+            for (let pixel of pixels_in_head(ctx, x, y, size)) {
+                //if (pixel.data.some())
+                    console.log(x, ',', y, ':', pixel.data);
             }
-            previous_x = get_x();
-            previous_y = get_y();
         };
 
-        this.start_jump = () => {
+        this.maybe_start_jump = () => {
+            if (Math.random() > 0.005) return;
             in_jump = true;
             jump_count = 0;
         };
 
         this.jump = () => {
             jump_count += 1;
-            if (jump_count > JUMP_LENGTH)
+            if (jump_count > jump_length)
                 in_jump = false;
         };
 
-        this.travel = () => {
+        this.travel = (history_ctx) => {
             // don't move if we're dead
             if (dead) return;
 
             if (last_paint_time === undefined)
                 last_paint_time = performance.now();
 
-            // if we're in a jump, count the number of loops,
-            // otherwise push the position to history
-            if (!in_jump) pushHistory();
+            // if we're in a jump, count the number of loops, otherwise check
+            // the position against history for collisions
+            if (!in_jump) check_history(history_ctx);
             else this.jump();
 
-            if (get_key_state(keys.left))
-                _this.direction -= turn_speed;
-            else if (get_key_state(keys.right))
-                _this.direction += turn_speed;
-
+            // get time delta from previous frame
             let paint_time = performance.now();
             let dt = paint_time - last_paint_time;
             last_paint_time = paint_time;
 
-            _this.x += dt * speed * Math.cos(_this.direction);
-            _this.y += dt * speed * Math.sin(_this.direction);
+            // turn, e.g. update direction
+            if (get_key_state(keys.left))
+                this.direction = normalize_direction(
+                    this.direction - dt * turn_speed);
+            else if (get_key_state(keys.right))
+                this.direction = normalize_direction(
+                    this.direction + dt * turn_speed);
+
+            // set new position
+            this.x += dt * speed * Math.cos(this.direction);
+            this.y += dt * speed * Math.sin(this.direction);
         };
 
-        this.paint = (history_context) => {
-            // if we're in a jump we do not draw to the history layer
+        this.paint_tail = (ctx) => {
+            // if we're in a jump we do not paint the tail
             if (in_jump) return;
 
-            //history_context.save();
-            history_context.beginPath();
-            history_context.fillStyle = color;
-            history_context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
-            /*history_context.translate(x, y);
-            history_context.rotate(direction);
-            history_context.fillRect(_this.x - 5, _this.y - 1, 10, 2);*/
-            history_context.fill();
-            //history_context.restore();
+            ctx.save();
+            //ctx.beginPath();
+            ctx.fillStyle = color;
+            //ctx.arc(this.x, this.y, size, 0, Math.PI * 2, true);
+            //ctx.fill();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.direction + Math.PI/2);
+
+            ctx.fillRect(-size, -1, 2 * size, size);
+            ctx.restore();
         };
 
-        this.paint_current_pos = (position_context) => {
-            // paint filled circle at current position
-            position_context.beginPath();
-            position_context.fillStyle = color;
-            position_context.arc(_this.x, _this.y, size, 0, Math.PI * 2, true);
-            position_context.fill();
+        this.paint_head = (ctx) => {
+            // paint a filled circular disc at the current position
+            ctx.save();
+            ctx.beginPath();
+            ctx.fillStyle = '#fff';//color;
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.direction + Math.PI/2);
+            ctx.arc(0, 0, size, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.restore();
         };
     };
-
-    let app = {};
 
     (() => {
         let history_layer = document.getElementById('history_layer');
@@ -179,8 +174,6 @@
 
         let position_layer = document.getElementById('position_layer');
         let position_ctx = position_layer.getContext('2d');
-
-        let history = new History(history_layer.width, history_layer.height);
 
         let lr = {'left': 'ArrowLeft', 'right': 'ArrowRight'};
         let zx = {'left': 'z', 'right': 'x'};
@@ -191,17 +184,17 @@
                 random_within(200, 600), // initial x
                 random_within(200, 400), // initial y
                 random_direction(), // initial direction
-                '#ff5600', history, lr),
+                '#ff5600', lr),
+            /*new Worm(
+                random_within(200, 600), // initial x
+                random_within(200, 400), // initial y
+                random_direction(), // initial direction
+                '#0f8', zx),
             new Worm(
                 random_within(200, 600), // initial x
                 random_within(200, 400), // initial y
                 random_direction(), // initial direction
-                '#0f8', history, zx),
-            new Worm(
-                random_within(200, 600), // initial x
-                random_within(200, 400), // initial y
-                random_direction(), // initial direction
-                '#05f', history, nm),
+                '#47f', nm),*/
         ];
 
         let loop = () => {
@@ -209,12 +202,14 @@
             position_ctx.clearRect(
                 0, 0, position_layer.width, position_layer.height);
 
+            console.log(get_key_state('ArrowLeft'), get_key_state('ArrowRight'));
+
             worms.forEach((worm) => {
                 if (Math.random() > .995)
-                    worm.start_jump();
-                worm.travel();
-                worm.paint(history_ctx);
-                worm.paint_current_pos(position_ctx);
+                    worm.maybe_start_jump();
+                worm.travel(history_ctx);
+                worm.paint_tail(history_ctx);
+                worm.paint_head(position_ctx);
             });
             window.requestAnimationFrame(loop);
         };

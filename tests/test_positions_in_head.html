@@ -1,0 +1,111 @@
+<style>
+    #canvas {
+        background: #eee;
+    }
+</style>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script src="../geometry.js"></script>
+<script async>
+    "use strict";
+
+    window.onload = () => {
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+
+        let pixel = ctx.createImageData(1, 1);
+        pixel.data[0] = 255;
+        pixel.data[3] = 150;
+
+        let a = 50;
+        let b = 300;
+        let r = 20;
+        let directions = [
+            // the problematics
+            //3 * Math.PI / 2,
+            //5.39
+            // divisibles of 90 degrees
+            0, Math.PI/2, Math.PI, 3 * Math.PI / 2, 2 * Math.PI,
+            // arbitrary angles
+            0.234, 2.99, 1.27, 5.39
+        ];
+
+        for (let direction of directions) {
+            for (let [x, y] of positions_in_head(a, b, r, direction)) {
+                ctx.putImageData(pixel, x, y);
+            }
+
+            ctx.beginPath();
+            ctx.arc(a, b, r,
+                normalize_direction(direction - Math.PI / 2),
+                normalize_direction(direction - 3 * Math.PI / 2));
+            ctx.fillStyle = 'rgba(0, 255, 0, .5)';
+            ctx.fill();
+
+            ctx.save();
+            ctx.translate(a, b + 20);
+            ctx.rotate(Math.PI / 3);
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            let d = direction + Math.PI / 2;
+            ctx.fillText('θ = ' + direction, 30, 5);
+            ctx.fillText('d = ' + d, 30, 20);
+            ctx.fillText('tan(d) = ' + Math.tan(d), 30, 35);
+            ctx.restore();
+
+            a += 75;
+        }
+
+        let direction = 3 * Math.PI / 2 - .5;
+
+        let loop = () => {
+
+            ctx.clearRect(0, 0, 200, 100);
+
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('direction: ' + direction, 10, 20);
+
+            ctx.clearRect(a-r, b-r,2*r,2*r);
+
+            for (let [x, y] of positions_in_head(a, b, r, direction)) {
+                ctx.putImageData(pixel, x, y);
+            }
+
+            direction = normalize_direction(direction + .01);
+
+            window.requestAnimationFrame(loop);
+        };
+
+        window.requestAnimationFrame(loop);
+
+        /*
+        let direction = 0;
+
+        let loop = () => {
+
+            ctx.clearRect(0, 0, 200, 100);
+
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('direction: ' + direction, 10, 20);
+
+            ctx.clearRect(a-r, b+200-r,2*r,2*r);
+
+            ctx.beginPath();
+            ctx.arc(a, b + 200, r,
+                normalize_direction(direction - Math.PI / 2),
+                normalize_direction(direction - 3 * Math.PI / 2));
+            ctx.fillStyle = 'rgba(0, 255, 0, 1)';
+            ctx.fill();
+
+            direction += .005;
+
+            window.requestAnimationFrame(loop);
+        };
+
+        window.requestAnimationFrame(loop);*/
+
+    };
+</script>
