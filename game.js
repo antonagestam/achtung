@@ -14,7 +14,7 @@ function* pixels_in_head(ctx, a, b, r, direction) {
 let Worm = function (x, y, direction, color, keys) {
     let speed = .16;
     let turn_speed = .0025;
-    let size = 3;
+    let size = 4;
     let jump_length = 8;
     let dead = false;
     this.x = x;
@@ -160,7 +160,7 @@ let Worm = function (x, y, direction, color, keys) {
     ];
 
     let started = false;
-    window.setTimeout(() => {started = true;}, 3000);
+    window.setTimeout(() => started = true, 2000);
 
     let loop = () => {
         // clear position layer
@@ -168,12 +168,10 @@ let Worm = function (x, y, direction, color, keys) {
             0, 0, position_layer.width, position_layer.height);
 
         worms.forEach((worm) => {
-            console.log(started);
             worm.maybe_start_jump();
             worm.travel(history_ctx);
             worm.paint_head(position_ctx);
-            if (started)
-                worm.paint_tail(history_ctx);
+            if (started) worm.paint_tail(history_ctx);
         });
         window.requestAnimationFrame(loop);
     };
