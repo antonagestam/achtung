@@ -20,6 +20,10 @@ function line_filter(direction, a, b) {
         return true if y is above the line
     */
 
+    // move the point one pixel towards the head to make a margin
+    a += Math.cos(direction);
+    b += Math.sin(direction);
+
     if (direction === 0 || direction === 2 * Math.PI)
         return (x, y) => x > a;
     if (direction % Math.PI === 0)
@@ -76,4 +80,4 @@ let in_circle = (x, y, a, b, r) =>
 
     Formula from https://en.wikipedia.org/wiki/Disk_(mathematics)
     */
-    (x - a) ** 2 + (y - b) ** 2 <= r ** 2;
+    (x - a) ** 2 + (y - b) ** 2 < r ** 2;

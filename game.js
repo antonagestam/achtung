@@ -12,7 +12,7 @@ function* pixels_in_head(ctx, a, b, r, direction) {
 }
 
 let Worm = function (x, y, direction, color, keys) {
-    let speed = .14;
+    let speed = .16;
     let turn_speed = .0025;
     let size = 4;
     let jump_length = 12;
@@ -36,10 +36,22 @@ let Worm = function (x, y, direction, color, keys) {
         let x = get_x();
         let y = get_y();
 
-        for (let pixel of pixels_in_head(ctx, x, y, size, direction)) {
+        for (let pixel of pixels_in_head(ctx, x, y, size, this.direction)) {
             if (pixel.data[3] === 255) {
-                console.log(x, ',', y, ':', pixel.data);
                 die();
+                console.log(x, ',', y, ':', pixel.data);
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#00ff00';
+                ctx.arc(x, y, 2, 0, 2*Math.PI);
+                ctx.stroke();
+
+                for (let [ax, ay] of positions_in_head(x, y, size, this.direction)) {
+                    ctx.beginPath();
+                    ctx.fillStyle = '#4767ff';
+                    ctx.fillRect(ax, ay, 1, 1);
+                }
+
                 break;
             }
         }
@@ -92,14 +104,11 @@ let Worm = function (x, y, direction, color, keys) {
         if (in_jump) return;
 
         ctx.save();
-        //ctx.beginPath();
         ctx.fillStyle = color;
-        //ctx.arc(this.x, this.y, size, 0, Math.PI * 2, true);
-        //ctx.fill();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.direction + Math.PI/2);
 
-        ctx.fillRect(-size, size, 2 * size, size);
+        ctx.fillRect(-size, 0, 2 * size, size);
         ctx.restore();
     };
 
@@ -107,10 +116,11 @@ let Worm = function (x, y, direction, color, keys) {
         // paint a filled circular disc at the current position
         ctx.save();
         ctx.beginPath();
-        ctx.fillStyle = '#fff';//color;
+        ctx.fillStyle = color;
         ctx.translate(this.x, this.y);
         ctx.rotate(this.direction + Math.PI/2);
-        ctx.arc(0, 0, size, 0, Math.PI * 2, true);
+        //ctx.arc(0, 0, size, 0, Math.PI * 2, true);
+        ctx.arc(0, 0, size, 0, Math.PI, true);
         ctx.fill();
         ctx.restore();
     };
@@ -133,11 +143,11 @@ let Worm = function (x, y, direction, color, keys) {
             random_within(200, 400), // initial y
             random_direction(), // initial direction
             '#ff5600', lr),
-        /*new Worm(
+        new Worm(
             random_within(200, 600), // initial x
             random_within(200, 400), // initial y
             random_direction(), // initial direction
-            '#0f8', zx),
+            '#0f8', zx),/*
         new Worm(
             random_within(200, 600), // initial x
             random_within(200, 400), // initial y

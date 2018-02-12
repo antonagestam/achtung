@@ -28,15 +28,20 @@
         let c = 0;
 
         for (let [x, y] of positions_in_circle(a, b, r)) {
-            window.setTimeout(
+            /*window.setTimeout(
                 () => window.requestAnimationFrame(
-                    () =>ctx.putImageData(pixel, x, y), 0));
-            //ctx.putImageData(pixel, x, y);
+                    () =>ctx.putImageData(pixel, x, y), 0));*/
+            ctx.putImageData(pixel, x, y);
             c++;
         }
 
         console.log(
             'generated ' + c + ' pixels in '
             + (performance.now()-start) + 'ms');
+
+        ctx.beginPath();
+        ctx.arc(a, b, r, 0, Math.PI * 2, true);
+        ctx.fillStyle = 'rgba(23, 56, 255, .5)';
+        ctx.fill();
     };
 </script>
