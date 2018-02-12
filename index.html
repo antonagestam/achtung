@@ -30,23 +30,7 @@
 
 <script src="./random.js"></script>
 <script src="./geometry.js"></script>
-
-<script>
-    "use strict";
-
-    console.log('loaded key state');
-
-    let get_key_state = (() => {
-        let state = {};
-
-        $('body')
-            .on('keyup', (e) => state[e.key] = true)
-            .on('keydown', (e) => state[e.key] = false);
-
-        return (key) => state.hasOwnProperty(key) && state[key] || false;
-    })();
-
-</script>
+<script src="./key_state.js"></script>
 
 <script>
     "use strict";
@@ -202,11 +186,8 @@
             position_ctx.clearRect(
                 0, 0, position_layer.width, position_layer.height);
 
-            console.log(get_key_state('ArrowLeft'), get_key_state('ArrowRight'));
-
             worms.forEach((worm) => {
-                if (Math.random() > .995)
-                    worm.maybe_start_jump();
+                worm.maybe_start_jump();
                 worm.travel(history_ctx);
                 worm.paint_tail(history_ctx);
                 worm.paint_head(position_ctx);
