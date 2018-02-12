@@ -1,7 +1,5 @@
 "use strict";
 
-console.log('loaded key state');
-
 let get_key_state = (() => {
     let state = {};
 
