@@ -39,6 +39,10 @@ let Worm = function (x, y, direction, color, keys) {
         for (let pixel of pixels_in_head(ctx, x, y, size, this.direction)) {
             if (pixel.data[3] === 255) {
                 die();
+
+                /*
+                // debug death :D
+                 
                 console.log(x, ',', y, ':', pixel.data);
 
                 ctx.beginPath();
@@ -51,6 +55,7 @@ let Worm = function (x, y, direction, color, keys) {
                     ctx.fillStyle = '#4767ff';
                     ctx.fillRect(ax, ay, 1, 1);
                 }
+                */
 
                 break;
             }
