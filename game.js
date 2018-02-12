@@ -42,7 +42,7 @@ let Worm = function (x, y, direction, color, keys) {
 
                 /*
                 // debug death :D
-                 
+
                 console.log(x, ',', y, ':', pixel.data);
 
                 ctx.beginPath();
@@ -152,12 +152,12 @@ let Worm = function (x, y, direction, color, keys) {
             random_within(200, 600), // initial x
             random_within(200, 400), // initial y
             random_direction(), // initial direction
-            '#0f8', zx),/*
+            '#0f8', zx),
         new Worm(
             random_within(200, 600), // initial x
             random_within(200, 400), // initial y
             random_direction(), // initial direction
-            '#47f', nm),*/
+            '#47f', nm),
     ];
 
     let loop = () => {
