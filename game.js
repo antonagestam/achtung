@@ -13,7 +13,7 @@ function* pixels_in_head(ctx, a, b, r, direction) {
 
 let Worm = function (x, y, direction, color, keys) {
     let speed = .16;
-    let turn_speed = .0025;
+    let turn_speed = .003;
     let size = 5;
     let jump_length = size * 25;
     let dead = false;
@@ -32,9 +32,16 @@ let Worm = function (x, y, direction, color, keys) {
         dead = true;
     };
 
-    let check_history = (ctx) => {
+    let check_collisions = (ctx) => {
         let x = get_x();
         let y = get_y();
+
+        // check if we've hit a wall
+        if (x - size < 0 // left wall
+            || x + size > ctx.canvas.clientWidth // right wall
+            || y - size < 0 // top wall
+            || y + size > ctx.canvas.clientHeight// bottom wall
+        ) die();
 
         for (let pixel of pixels_in_head(ctx, x, y, size, this.direction)) {
             // die if a pixel under the head has full opacity
@@ -84,7 +91,7 @@ let Worm = function (x, y, direction, color, keys) {
 
         // if we're in a jump, count the number of loops, otherwise check
         // the position against history for collisions
-        if (!in_jump) check_history(history_ctx);
+        if (!in_jump) check_collisions(history_ctx);
         else this.jump();
 
         // get time delta from previous frame
