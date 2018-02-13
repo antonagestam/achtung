@@ -6,6 +6,8 @@ function* pixels_in_head(ctx, a, b, r, direction) {
     context that are within the circle that has a center of x, y = a, b and
     a radius of r.
      */
+    // TODO let image_data = ctx.getImageData(a-r, b-r, 2*r, 2*r).data;
+
     for (let [x, y] of positions_in_head(a, b, r, direction)) {
         yield ctx.getImageData(x, y, 1, 1).data;
     }

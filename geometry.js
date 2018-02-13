@@ -24,6 +24,7 @@ function line_filter(direction, a, b) {
     a += Math.cos(direction);
     b += Math.sin(direction);
 
+    // case 1 and 2
     if (direction === 0 || direction === 2 * Math.PI)
         return (x, y) => x > a;
     if (direction % Math.PI === 0)
@@ -31,11 +32,11 @@ function line_filter(direction, a, b) {
 
     // L is a line perpendicular to the direction, crossing the
     // point (a, b)
-
     let d = direction + Math.PI / 2;
     let k = Math.tan(d);
     let L = (x) => k * (x - a) + b;
 
+    // case 3 and 4
     if (0 < direction && direction < Math.PI)
         return (x, y) => y > L(x);
     return (x, y) => y < L(x);
