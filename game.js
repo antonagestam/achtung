@@ -7,21 +7,21 @@ function* pixels_in_head(ctx, a, b, r, direction) {
     a radius of r.
      */
     for (let [x, y] of positions_in_head(a, b, r, direction)) {
-        yield ctx.getImageData(x, y, 1, 1);
+        yield ctx.getImageData(x, y, 1, 1).data;
     }
 }
 
 let Worm = function (x, y, direction, color, keys) {
     let speed = .16;
     let turn_speed = .0025;
-    let size = 4;
-    let jump_length = 8;
+    let size = 5;
+    let jump_length = size * 25;
     let dead = false;
     this.x = x;
     this.y = y;
     this.direction = direction;
     let in_jump = false;
-    let jump_count = 0;
+    let jump_start_time;
     let last_paint_time;
 
     let get_x = () => Math.round(this.x);
@@ -37,7 +37,8 @@ let Worm = function (x, y, direction, color, keys) {
         let y = get_y();
 
         for (let pixel of pixels_in_head(ctx, x, y, size, this.direction)) {
-            if (pixel.data[3] === 255) {
+            // die if a pixel under the head has full opacity
+            if (pixel[3] === 255) {
                 die();
 
                 /*
@@ -65,12 +66,12 @@ let Worm = function (x, y, direction, color, keys) {
     this.maybe_start_jump = () => {
         if (Math.random() > 0.005) return;
         in_jump = true;
-        jump_count = 0;
+        jump_start_time = performance.now();
     };
 
     this.jump = () => {
-        jump_count += 1;
-        if (jump_count > jump_length)
+        if (!in_jump) return;
+        if (performance.now() - jump_start_time > jump_length)
             in_jump = false;
     };
 
@@ -112,8 +113,7 @@ let Worm = function (x, y, direction, color, keys) {
         ctx.fillStyle = color;
         ctx.translate(this.x, this.y);
         ctx.rotate(this.direction + Math.PI/2);
-
-        ctx.fillRect(-size, 0, 2 * size, size);
+        ctx.fillRect(-size, 0, 2 * size, size/2 + 1);
         ctx.restore();
     };
 

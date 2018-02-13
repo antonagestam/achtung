@@ -73,11 +73,15 @@ let normalize_direction = (d) => {
     return d;
 };
 
-let in_circle = (x, y, a, b, r) =>
+let in_circle = (x, y, a, b, r) => {
     /*
     Return true if the point x, y is inside the circle that has a center in
     x, y = a, b and a radius of r.
 
     Formula from https://en.wikipedia.org/wiki/Disk_(mathematics)
+
+    Edited to take a lower bound, creating a 2px wide "stroke"
     */
-    (x - a) ** 2 + (y - b) ** 2 < r ** 2;
+    let d = (x - a) ** 2 + (y - b) ** 2;
+    return (r - 2) ** 2 < d && d < r ** 2;
+};
