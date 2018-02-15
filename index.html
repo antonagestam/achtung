@@ -1,35 +1,39 @@
-<style>
-    body {
-        background: black;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
+<link rel="stylesheet" href="style.css" />
 
-    .game {
-        position: relative;
-        width: 1024px;
-        height: 800px;
-    }
-
-    .game-layer {
-        position: absolute;
-        left: 0;
-        top: 0;
-    }
-
-    #history_layer {
-        background: #111;
-    }
-</style>
-
-<div class="game">
+<div class="game flex-item">
     <canvas id="history_layer" class="game-layer" width="1024" height="800"></canvas>
     <canvas id="position_layer" class="game-layer" width="1024" height="800"></canvas>
 </div>
+
+<form class="flex-item" enctype="multipart/form-data">
+    <label>
+        <span class="value" data-for="players">3</span>
+        Players
+    </label>
+    <input name="players" type="range" step="1" min="1" max="6" value="3" />
+
+
+    <label>
+        <span class="value" data-for="size">4</span>
+        Size
+    </label>
+    <input name="size" type="range" step="1" min="3" max="15" value="4" />
+
+    <label>
+        <span class="value" data-for="speed">.16</span>
+        Speed
+    </label>
+    <input name="speed" type="range" step=".01" min=".08" max=".32" value=".16" />
+
+
+    <label>
+        <span class="value" data-for="turn_speed">.0030</span>
+        Turn
+    </label>
+    <input name="turn_speed" type="range" step=".0001" min=".001" max=".005" value=".003" />
+
+    <button class="btn btn-start-game">Play</button>
+</form>
 
 <script
     src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"
@@ -39,4 +43,6 @@
 <script src="./random.js"></script>
 <script src="./geometry.js"></script>
 <script src="./key_state.js"></script>
+<script src="./worm.js"></script>
 <script src="./game.js"></script>
+<script src="./gui.js"></script>
