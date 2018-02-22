@@ -10,6 +10,26 @@ let animationFrame = () => {
     return promise;
 };
 
+let ws = new WSDispatcher(
+    'ws://' + document.domain + ':' + location.port + '/join');
+let player_id = null;
+let players = {};
+
+ws.bind('welcome', (data) => {
+    console.log(data);
+    player_id = data.player.id;
+});
+
+ws.bind('start', (data) => {
+    console.log('game is starting');
+    console.log(data);
+});
+
+ws.bind('position_update', (data) => {
+    console.log(data);
+    players[data.player_id] = data;
+});
+
 let start_game = (options) => {
     let history_layer = document.getElementById('history_layer');
     let history_ctx = history_layer.getContext('2d');
@@ -24,8 +44,6 @@ let start_game = (options) => {
         0, 0, history_ctx.canvas.width, history_ctx.canvas.height);
 
     let lr = {'left': 'ArrowLeft', 'right': 'ArrowRight'};
-    let zx = {'left': 'z', 'right': 'x'};
-    let nm = {'left': 'n', 'right': 'm'};
 
     let worms = [
         new Worm(
@@ -33,16 +51,6 @@ let start_game = (options) => {
             random_within(200, 400), // initial y
             random_direction(), // initial direction
             '#ff5600', lr, options),
-        new Worm(
-            random_within(200, 600), // initial x
-            random_within(200, 400), // initial y
-            random_direction(), // initial direction
-            '#0f8', zx, options),
-        new Worm(
-            random_within(200, 600), // initial x
-            random_within(200, 400), // initial y
-            random_direction(), // initial direction
-            '#47f', nm, options),
     ];
 
     let started = false;
@@ -63,6 +71,10 @@ let start_game = (options) => {
                 worm.travel(history_ctx);
                 worm.paint_head(position_ctx);
                 if (started) worm.paint_tail(history_ctx);
+                ws.send('position_update', {
+                    'worm': worm.serialize(),
+                    'client_id': player_id,
+                });
             });
 
             // keep game running unless all worms are dead

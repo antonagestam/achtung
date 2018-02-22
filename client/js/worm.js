@@ -34,6 +34,15 @@ let Worm = function (x, y, direction, color, keys, opts) {
     let get_x = () => Math.round(this.x);
     let get_y = () => Math.round(this.y);
 
+    this.serialize = () => {
+        return {
+            'x': get_x(),
+            'y': get_y(),
+            'direction': this.direction,
+            'in_jump': in_jump,
+        }
+    };
+
     let die = () => {
         speed = 0;
         dead = true;
