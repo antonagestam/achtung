@@ -3,14 +3,14 @@
 | redis |
 |_______|
   |  ^
-  |  | --- pub/sub
+  |  | --- [ pub/sub ]
   v  |
- _____________            _______
-|             |--------->|        |
-| web service |          | client |
-|_____________|<---------|________|
+ _____________
+|             |
+| web service | --- [ accumulates player positions ]
+|_____________|
   |  ^
-  |  | --- websockets
+  |  | --- [ websockets ]
   v  |
  ________
 |        |

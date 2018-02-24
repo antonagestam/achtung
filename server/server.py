@@ -1,5 +1,4 @@
 import asyncio
-import aioredis
 import uvloop
 import sanic
 import json
@@ -15,21 +14,23 @@ loop = asyncio.get_event_loop()
 app.static('/', './client')
 
 
-async def publish(ws, room):
-    """Receive messages from the WebSocket and pass them on to redis"""
-    redis = await aioredis.create_redis('redis://localhost/0')
+async def publish(ws, player):
+    """Receive keyevents from the WebSocket and update the player state"""
     while True:
         data = await ws.recv()
-        await redis.publish_json(room.id, data)
+        player.left = data.left
+        player.right = data.right
 
 
 async def subscribe(ws, room):
-    """Receive messages from redis and pass them on to the WebSocket"""
-    redis = await aioredis.create_redis('redis://localhost/0')
-    channel = (await redis.subscribe(room.id))[0]
-    while await channel.wait_message():
-        msg = await channel.get_json()
+    """Broadcast player positions at 60 fps"""
+    while True:
+        msg = json.dumps({
+            'event': 'position_update',
+            'data': room.player_positions(),
+        })
         await ws.send(msg)
+        await asyncio.sleep(.016667)
 
 
 @app.websocket('/join')
@@ -45,7 +46,7 @@ async def join(request, ws):
     player = Player()
     room = Room.get(player)
 
-    # send data about the player back
+    # send initial data about the player
     await ws.send(json.dumps({
         'event': 'welcome',
         'data': {'player': player.serialize(), },

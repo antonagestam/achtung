@@ -7,7 +7,7 @@ waiting_rooms = queue.Queue()
 
 
 class Room:
-    min_players = 3
+    min_players = 2
 
     def __init__(self):
         self.players = []
@@ -45,5 +45,16 @@ class Room:
     def serialize(self):
         return {
             'id': self.id,
-            'players': [p.serialize() for p in self.players],
+            'players': {
+                p.id: p.serialize() for p in self.players
+            }
+        }
+
+    def player_positions(self):
+        return {
+            p.id: {
+                'x': p.x,
+                'y': p.y,
+                'direction': p.direction,
+            } for p in self.players
         }

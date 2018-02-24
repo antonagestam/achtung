@@ -23,7 +23,6 @@ body {
     position: relative;
     width: 1024px;
     height: 800px;
-    display: none;
 }
 
 .game-layer {
@@ -78,4 +77,8 @@ input {
     left: -330px;
     top: 10px;
     font-weight: bold;
+}
+
+form {
+    display: none;
 }
