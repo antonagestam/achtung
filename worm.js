@@ -129,7 +129,7 @@ let Worm = function (x, y, direction, color, keys, opts) {
         ctx.fillStyle = color;
         ctx.translate(this.x, this.y);
         ctx.rotate(this.direction + Math.PI/2);
-        ctx.fillRect(-size, 0, 2 * size, size/2 + 1);
+        ctx.fillRect(-size, 0, 2 * size, size/2 + 2);
         ctx.restore();
     };
 

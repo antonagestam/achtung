@@ -1,14 +1,9 @@
 "use strict";
 
-let animationFrame = () => {
-    /*
-    https://esdiscuss.org/topic/promises-async-functions-and-requestanimationframe-together
-     */
-    let resolve = null;
-    const promise = new Promise((r) => resolve = r);
-    window.requestAnimationFrame(resolve);
-    return promise;
-};
+/*
+https://esdiscuss.org/topic/promises-async-functions-and-requestanimationframe-together
+ */
+let animation_frame = () => new Promise(window.requestAnimationFrame);
 
 let start_game = (options) => {
     let history_layer = document.getElementById('history_layer');
@@ -52,7 +47,7 @@ let start_game = (options) => {
     (async () => {
         let game_is_running = true;
         while (game_is_running) {
-            await animationFrame();
+            await animation_frame();
 
             // clear position layer
             position_ctx.clearRect(
