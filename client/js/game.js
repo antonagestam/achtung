@@ -52,7 +52,7 @@ let start_game = (worms) => {
     let players = null;
 
     ws.bind('welcome', (data) => {
-        console.log(data);
+        console.log('received welcome', data);
         player_id = data.player.id;
     });
 
