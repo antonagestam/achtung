@@ -44,7 +44,7 @@ let start_game = (options) => {
     window.setTimeout(() => started = true, 2000)
 
     // asynchronous game loop
-    (async () => {
+    ;(async () => {
         let game_is_running = true
         while (game_is_running) {
             await animation_frame()
