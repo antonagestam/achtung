@@ -1,7 +1,7 @@
 import asyncio
 import uvloop
 import sanic
-import json
+import ujson
 
 from .player import Player
 from .room import Room
@@ -17,15 +17,18 @@ app.static('/', './client')
 async def publish(ws, player):
     """Receive keyevents from the WebSocket and update the player state"""
     while True:
-        data = await ws.recv()
-        player.left = data.left
-        player.right = data.right
+        data = ujson.loads(await ws.recv())
+        down = data['event'] == 'keydown'
+        if data['data']['key'] == 'ArrowLeft':
+            player.left = down
+        elif data['data']['key'] == 'ArrowRight':
+            player.right = down
 
 
 async def subscribe(ws, room):
     """Broadcast player positions at 60 fps"""
     while True:
-        msg = json.dumps({
+        msg = ujson.dumps({
             'event': 'position_update',
             'data': room.player_positions(),
         })
@@ -47,7 +50,7 @@ async def join(request, ws):
     room = Room.get(player)
 
     # send initial data about the player
-    await ws.send(json.dumps({
+    await ws.send(ujson.dumps({
         'event': 'welcome',
         'data': {'player': player.serialize(), },
     }))
@@ -55,7 +58,7 @@ async def join(request, ws):
     # wait for room to fill then start
     await room.wait_start()
     print(f'game is starting in room {room.id}')
-    await ws.send(json.dumps({
+    await ws.send(ujson.dumps({
         'event': 'start',
         'data': {'room': room.serialize(), },
     }))

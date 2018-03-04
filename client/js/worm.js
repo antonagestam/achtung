@@ -16,12 +16,10 @@ function* pixels_in_head(ctx, a, b, r, direction) {
     }
 }
 
-let Worm = function (x, y, direction, color, keys, opts) {
-    let options = Object.assign({}, opts);
-
-    let speed = parseFloat(options.speed);
-    let turn_speed = parseFloat(options.turn_speed);
-    let size = parseInt(options.size);
+let Worm = function (x, y, direction, color, keys) {
+    let speed = .11;
+    let turn_speed = .003;
+    let size = 4;
     let jump_length = size * 25;
     let dead = false;
     this.x = x;
@@ -144,13 +142,9 @@ let Worm = function (x, y, direction, color, keys, opts) {
 
     this.paint_head = (ctx) => {
         // paint a filled circular disc at the current position
-        ctx.save();
         ctx.beginPath();
         ctx.fillStyle = color;
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.direction + Math.PI/2);
-        ctx.arc(0, 0, size, 0, Math.PI * 2, true);
+        ctx.arc(this.x, this.y, size, 0, Math.PI * 2, true);
         ctx.fill();
-        ctx.restore();
     };
 };

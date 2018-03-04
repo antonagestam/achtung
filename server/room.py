@@ -4,11 +4,10 @@ import uuid
 import random
 
 waiting_rooms = queue.Queue()
+min_players = 1
 
 
 class Room:
-    min_players = 2
-
     def __init__(self):
         self.players = []
         self.started = False
@@ -29,6 +28,10 @@ class Room:
 
     @classmethod
     def get(cls, player):
+        """
+        Find a room for a player by first checking if there are rooms waiting
+        for players, otherwise creates a new one.
+        """
         try:
             room = waiting_rooms.get_nowait()
         except queue.Empty:
@@ -36,7 +39,7 @@ class Room:
 
         room.join(player)
 
-        if len(room.players) == cls.min_players:
+        if len(room.players) == min_players:
             room.start()
         else:
             waiting_rooms.put(room)

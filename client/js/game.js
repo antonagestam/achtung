@@ -3,10 +3,8 @@
 let animation_frame = () => new Promise(window.requestAnimationFrame)
 
 let get_worms = (players) => {
-    return players.map((p) => {
-        new Worm(p.x, p.y, p.direction, p.color);
-    });
-};
+    return Object.values(players).map((p) => new Worm(p.x, p.y, p.direction, p.color));
+}
 
 let start_game = (worms) => {
     let history_layer = document.getElementById('history_layer');
@@ -28,17 +26,17 @@ let start_game = (worms) => {
     (async () => {
         let game_is_running = true;
         while (game_is_running) {
-            await animation_frame();
+            await animation_frame()
 
             // clear position layer
             position_ctx.clearRect(
-                0, 0, position_layer.width, position_layer.height);
+                0, 0, position_layer.width, position_layer.height)
 
             worms.forEach((worm) => {
                 //worm.maybe_start_jump();
                 //worm.travel(history_ctx);
                 worm.paint_head(position_ctx);
-                if (started) worm.paint_tail(history_ctx);
+                //if (started) worm.paint_tail(history_ctx);
             });
 
             // keep game running unless all worms are dead
@@ -69,6 +67,7 @@ let start_game = (worms) => {
             players[player_id].x = pos.x;
             players[player_id].y = pos.y;
             players[player_id].direction = pos.direction;
+            console.log(pos.x, pos.y, pos.direction)
         }
     });
 
