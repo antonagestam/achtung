@@ -1,5 +1,7 @@
 "use strict";
 
+let animation_frame = () => new Promise(window.requestAnimationFrame)
+
 let get_worms = (players) => {
     return players.map((p) => {
         new Worm(p.x, p.y, p.direction, p.color);
